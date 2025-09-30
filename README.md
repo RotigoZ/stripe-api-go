@@ -63,7 +63,8 @@ A robust backend API built in Go that simulates a complete e-commerce payment fl
   // Define relationships
   Ref: order_items.order_id > orders.id
   Ref: order_items.product_id > products.id
-
+```
+</details>
 
 ## 🚀 Getting Started
 
