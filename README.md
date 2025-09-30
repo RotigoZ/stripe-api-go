@@ -3,7 +3,8 @@
   ![Go Version](https://img.shields.io/badge/Go-1.21-00ADD8?style=for-the-badge&logo=go)
   ![Stripe](https://img.shields.io/badge/Stripe-6772E5?style=for-the-badge&logo=stripe)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql) 
-  A robust backend API built in Go that simulates a complete e-commerce payment flow by integrating with the Stripe API. This project was developed as an in-depth study of software architecture, concurrency, external service integration, and Go development best practices.
+  
+A robust backend API built in Go that simulates a complete e-commerce payment flow by integrating with the Stripe API. This project was developed as an in-depth study of software architecture, concurrency, external service integration, and Go development best practices.
 
 ## ✨ Features
 
@@ -62,7 +63,7 @@
   // Define relationships
   Ref: order_items.order_id > orders.id
   Ref: order_items.product_id > products.id
-```
+
 
 ## 🚀 Getting Started
 
