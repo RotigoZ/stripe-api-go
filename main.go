@@ -29,8 +29,10 @@ func main() {
 	r := mux.NewRouter()
 	orderHandler := controllers.NewOrderHandler(db)
 	productHandler := controllers.NewProductHandler(db)
+	userHandler := controllers.NewUserHandler(db)
 	routes.RegistroRotasProdutos(r, productHandler)
 	routes.RegistroRotasOrders(r, orderHandler)
+	routes.RegistroRotasUsers(r, userHandler)
 
 	log.Printf("HTTP Connection Initialized!")
 

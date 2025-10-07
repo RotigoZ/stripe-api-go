@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE products (
     id BIGSERIAL PRIMARY KEY,
@@ -24,4 +25,13 @@ CREATE TABLE order_items (
     product_id BIGINT NOT NULL REFERENCES products(id),
     quantity INT NOT NULL CHECK(quantity > 0),
     price_at_purchase_cents INT NOT NULL
+);
+
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    nick VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
