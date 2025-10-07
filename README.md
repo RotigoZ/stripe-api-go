@@ -217,6 +217,6 @@ This project does not yet have an automated test suite. Future work includes add
 
 ## Future Improvement
 
-* **User Authentication:** Implement JWT authentication for user-specific orders.
+* **User Authentication:** Implement JWT authentication for user-specific orders. (In process)
 * **Frontend Application:** Build a client-side application to interact with the API.
 * **Pagination:** Add pagination to the GET /products endpoint.
