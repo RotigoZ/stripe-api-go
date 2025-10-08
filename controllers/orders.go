@@ -49,7 +49,7 @@ func (h *OrderHandler) PaymentIntent(w http.ResponseWriter, r *http.Request) {
 	for _, produto := range body.Products {
 		amount_cents, erro := repositories.SearchProductPrice(h.db, produto.ProductID)
 		if erro != nil {
-			http.Error(w, "Error searching the product price on the database", http.StatusInternalServerError)
+			http.Error(w, "Error searching the product price in the database", http.StatusInternalServerError)
 			return
 		}
 		valorTotal = valorTotal + amount_cents*int64(produto.Quantity)

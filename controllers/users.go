@@ -3,15 +3,18 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
-	"golang.org/x/crypto/bcrypt"
+	"strconv"
+
 	emailverifier "github.com/AfterShip/email-verifier"
 	"github.com/RotigoZ/stripe-api-go/models"
 	"github.com/RotigoZ/stripe-api-go/repositories"
-	"github.com/lib/pq"
 	"github.com/go-passwd/validator"
-	"errors"
+	"github.com/gorilla/mux"
+	"github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 
@@ -102,4 +105,22 @@ func (h *UserHandler) UsersRead(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	w.Write(jsonData)
+}
+
+func (h *UserHandler) UserRead(w http.ResponseWriter, r *http.Request){
+	params := mux.Vars(r)
+	id, erro := strconv.ParseUint(params["id"], 10, 64)
+	if erro != nil{
+		http.Error(w, "Error reading the parameters in the URL", http.StatusBadRequest)
+		return
+	}
+
+	user, erro := repositories.UserRead(h.db, id)
+	if erro != nil{
+		http.Error(w, "Error searching the user in the database", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }

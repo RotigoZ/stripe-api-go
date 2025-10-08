@@ -31,3 +31,14 @@ func UsersRead(db *sql.DB, users []models.Users) ([]models.Users, error){
 
 	return users, nil
 }
+
+func UserRead(db *sql.DB, id uint64) (models.Users, error){
+	var user models.Users
+	row := db.QueryRow("SELECT nick, name, email, created_at FROM users where id=$1", id)
+
+	if erro := row.Scan(&user.Nick, &user.Name, &user.Email, &user.CreatedAt); erro != nil{
+			return models.Users{}, erro
+		}
+
+	return user, nil
+}

@@ -64,7 +64,7 @@ func CreateOrder(db *sql.DB, pi *stripe.PaymentIntent, items []models.ProductReq
 
 }
 
-// UpdateOrderStatus updates the order staus on the database
+// UpdateOrderStatus updates the order staus in the database
 func UpdateOrderStatus(db *sql.DB, id string, status string) error {
 	_, erro := db.Exec("UPDATE orders SET status=$1 WHERE stripe_payment_intent_id=$2", status, id)
 	if erro != nil {

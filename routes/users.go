@@ -25,6 +25,11 @@ func RegistroRotasUsers(r *mux.Router, userHandler *controllers.UserHandler) {
 			Method:  "GET",
 			Handler: userHandler.UsersRead,
 		},
+		{
+			URL:     "/users/{id}",
+			Method:  "GET",
+			Handler: userHandler.UserRead,
+		},
 	}
 
 	for _, route := range UserRoutes {

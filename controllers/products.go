@@ -63,13 +63,13 @@ func (h *ProductHandler) ProductRead(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, erro := strconv.ParseUint(params["id"], 10, 64)
 	if erro != nil {
-		http.Error(w, "Error reading the parameters in the URL", http.StatusInternalServerError)
+		http.Error(w, "Error reading the parameters in the URL", http.StatusBadRequest)
 		return
 	}
 
 	produto, erro := repositories.ProductRead(h.db, id)
 	if erro != nil {
-		http.Error(w, "Error searching the product on the database", http.StatusBadRequest)
+		http.Error(w, "Error searching the product in the database", http.StatusBadRequest)
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *ProductHandler) ProductUpdate(w http.ResponseWriter, r *http.Request) {
 
 	erro = repositories.ProductUpdate(h.db, id, produto)
 	if erro != nil {
-		http.Error(w, "Error searching the product on the database", http.StatusBadRequest)
+		http.Error(w, "Error searching the product in the database", http.StatusBadRequest)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *ProductHandler) ProductDelete(w http.ResponseWriter, r *http.Request) {
 
 	erro = repositories.ProductDelete(h.db, id)
 	if erro != nil {
-		http.Error(w, "Error searching the product on the database", http.StatusBadRequest)
+		http.Error(w, "Error searching the product in the database", http.StatusBadRequest)
 		return
 	}
 
