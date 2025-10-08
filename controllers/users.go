@@ -23,7 +23,7 @@ func NewUserHandler(db *sql.DB) *UserHandler {
 	return &UserHandler{db: db}
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) UserCreate(w http.ResponseWriter, r *http.Request) {
 	var user models.Users
 	erro := json.NewDecoder(r.Body).Decode(&user)
 	if erro != nil {
@@ -62,7 +62,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user.PasswordHash = string(passwordHash)
 
-	erro = repositories.CreateUser(h.db, user)
+	erro = repositories.UserCreate(h.db, user)
 	if erro != nil {
 		if pqErro, ok := erro.(*pq.Error); ok && pqErro.Code == "23505" {
        
@@ -83,4 +83,23 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("User created successfully!"))
+}
+
+func (h *UserHandler) UsersRead(w http.ResponseWriter, r *http.Request){
+	var users []models.Users
+
+	users, erro := repositories.UsersRead(h.db, users)
+	if erro != nil{
+		log.Printf("%s", erro)
+		http.Error(w, "Error reading the users", http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	jsonData, err := json.MarshalIndent(users, "", "  ")
+	if err != nil {
+		http.Error(w, "Error indenting the JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
 }

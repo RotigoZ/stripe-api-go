@@ -18,7 +18,12 @@ func RegistroRotasUsers(r *mux.Router, userHandler *controllers.UserHandler) {
 		{
 			URL:     "/users",
 			Method:  "POST",
-			Handler: userHandler.CreateUser,
+			Handler: userHandler.UserCreate,
+		},
+		{
+			URL:     "/users",
+			Method:  "GET",
+			Handler: userHandler.UsersRead,
 		},
 	}
 
