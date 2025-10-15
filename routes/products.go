@@ -1,49 +1,41 @@
 package routes
 
 import (
-	"net/http"
 	"github.com/RotigoZ/stripe-api-go/controllers"
-	"github.com/gorilla/mux"
 )
 
-type ProductRoute struct{
-	URL string
-	Method string
-	Handler http.HandlerFunc
-}
-
-
-
-func RegistroRotasProdutos(r *mux.Router, productHandler *controllers.ProductHandler){
-	productRoutes := []ProductRoute{
+func GetProductRoutes(productHandler *controllers.ProductHandler) []Route{
+	ProductRoutes := []Route{
 	{
 		URL: "/products",
 		Method: "POST",
 		Handler: productHandler.ProductCreate,
+		AuthRequired: true,
 	},
 	{
 		URL: "/products",
 		Method: "GET",
 		Handler: productHandler.ProductsRead,
+		AuthRequired: false,
 	},
 	{
 		URL: "/products/{id}",
 		Method: "GET",
 		Handler: productHandler.ProductRead,
+		AuthRequired: false,
 	},
 	{
-		URL: "/product/{id}",
+		URL: "/products/{id}",
 		Method: "PUT",
 		Handler: productHandler.ProductUpdate,
+		AuthRequired: true,
 	},
 	{
 		URL: "/products/{id}",
 		Method: "DELETE",
 		Handler: productHandler.ProductDelete,
+		AuthRequired: true,
 	},
 }
-
-	for _, route := range productRoutes {
-        r.HandleFunc(route.URL, route.Handler).Methods(route.Method)
-    }
+	return ProductRoutes
 }

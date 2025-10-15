@@ -4,8 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"github.com/RotigoZ/stripe-api-go/controllers"
+
 	"github.com/RotigoZ/stripe-api-go/db"
+	"github.com/RotigoZ/stripe-api-go/middlewares"
 	"github.com/RotigoZ/stripe-api-go/routes"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -27,12 +28,17 @@ func main() {
 	defer db.Close()
 
 	r := mux.NewRouter()
-	orderHandler := controllers.NewOrderHandler(db)
-	productHandler := controllers.NewProductHandler(db)
-	userHandler := controllers.NewUserHandler(db)
-	routes.RegistroRotasProdutos(r, productHandler)
-	routes.RegistroRotasOrders(r, orderHandler)
-	routes.RegistroRotasUsers(r, userHandler)
+	allRoutes := routes.ConfigureRoutes(db)
+
+	for _, route := range allRoutes {
+		var handler http.Handler = route.Handler
+
+		if route.AuthRequired {
+			handler = middlewares.AuthMiddleware(handler)
+		}
+
+		r.Handle(route.URL, handler).Methods(route.Method)
+	}
 
 	log.Printf("HTTP Connection Initialized!")
 

@@ -3,9 +3,11 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+
 	"github.com/RotigoZ/stripe-api-go/models"
 	"github.com/RotigoZ/stripe-api-go/repositories"
 	"github.com/gorilla/mux"
@@ -114,7 +116,12 @@ func (h *ProductHandler) ProductDelete(w http.ResponseWriter, r *http.Request) {
 
 	erro = repositories.ProductDelete(h.db, id)
 	if erro != nil {
-		http.Error(w, "Error searching the product in the database", http.StatusBadRequest)
+		if errors.Is(erro, repositories.ErrProductNotFound) {
+			http.Error(w, "Product not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "An internal server error occurred", http.StatusInternalServerError)
 		return
 	}
 

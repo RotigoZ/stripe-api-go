@@ -1,39 +1,37 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/RotigoZ/stripe-api-go/controllers"
-	"github.com/gorilla/mux"
 )
 
-type UsersRoute struct {
-	URL     string
-	Method  string
-	Handler http.HandlerFunc
-}
-
-func RegistroRotasUsers(r *mux.Router, userHandler *controllers.UserHandler) {
-	UserRoutes := []UsersRoute{
+func GetUserRoutes(userHandler *controllers.UserHandler) []Route{
+	UserRoutes := []Route{
 		{
 			URL:     "/users",
 			Method:  "POST",
 			Handler: userHandler.UserCreate,
+			AuthRequired: false,
+		},
+		{
+			URL:     "/login",
+			Method:  "POST",
+			Handler: userHandler.UserLogin,
+			AuthRequired: false,
 		},
 		{
 			URL:     "/users",
 			Method:  "GET",
 			Handler: userHandler.UsersRead,
+			AuthRequired: false,
 		},
 		{
 			URL:     "/users/{id}",
 			Method:  "GET",
 			Handler: userHandler.UserRead,
+			AuthRequired: false,
 		},
 	}
 
-	for _, route := range UserRoutes {
-		r.HandleFunc(route.URL, route.Handler).Methods(route.Method)
-	}
+	return UserRoutes
 
 }

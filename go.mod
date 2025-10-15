@@ -12,7 +12,10 @@ require github.com/stripe/stripe-go/v72 v72.122.0
 
 require (
 	github.com/AfterShip/email-verifier v1.4.1 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-passwd/validator v0.0.0-20250407044832-c284a2f4d990 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/hbollon/go-edlib v1.6.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/net v0.43.0 // indirect

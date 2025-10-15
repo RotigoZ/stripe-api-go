@@ -3,10 +3,17 @@ package models
 import "time"
 
 type Users struct {
-	Name         string `json:"name"`
-	Nick 		 string `json:"nick"`
-	Email        string `json:"email"`
+	Id           int64     `json:"id"`
+	Role		 string	   `json:"role"`
+	Name         string    `json:"name"`
+	Nick         string    `json:"nick"`
+	Email        string    `json:"email"`
 	Password     string    `json:"password,omitempty"`
-	PasswordHash string 	`json:"-"`
+	PasswordHash string    `json:"-"`
 	CreatedAt    time.Time `json:"created_at"`
+}
+
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }

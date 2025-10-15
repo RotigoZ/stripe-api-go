@@ -1,32 +1,24 @@
 package routes
 
 import (
-	"net/http"
 	"github.com/RotigoZ/stripe-api-go/controllers"
-	"github.com/gorilla/mux"
 )
 
-type OrdersRoute struct {
-	URL     string
-	Method  string
-	Handler http.HandlerFunc
-}
-
-func RegistroRotasOrders(r *mux.Router, orderHandler *controllers.OrderHandler) {
-	ordersRoutes := []OrdersRoute{
+func GetOrderRoutes(orderHandler *controllers.OrderHandler) []Route{
+	OrdersRoutes := []Route{
 		{
 			URL:     "/orders",
 			Method:  "POST",
 			Handler: orderHandler.PaymentIntent,
+			AuthRequired: true,
 		},
 		{
 			URL:     "/webhooks/stripe",
 			Method:  "POST",
 			Handler: orderHandler.HandleStripeWebhook,
+			AuthRequired: true,
 		},
 	}
 
-	for _, route := range ordersRoutes {
-		r.HandleFunc(route.URL, route.Handler).Methods(route.Method)
-	}
+	return OrdersRoutes
 }
