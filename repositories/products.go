@@ -50,10 +50,20 @@ func ProductRead(db *sql.DB, id uint64) (models.Product, error) {
 
 // ProductUpdate updates a product in the database
 func ProductUpdate(db *sql.DB, id uint64, produto models.Product) error {
-	_, erro := db.Exec("UPDATE products SET name=$1, description=$2, price_cents=$3 WHERE id=$4", produto.Name, produto.Description, produto.PriceCents, id)
+	result, erro := db.Exec("UPDATE products SET name=$1, description=$2, price_cents=$3 WHERE id=$4", produto.Name, produto.Description, produto.PriceCents, id)
 	if erro != nil {
 		return erro
 	}
+
+	rowsAffected, erro := result.RowsAffected()
+	if erro != nil{
+		return erro
+	}
+
+	if rowsAffected == 0{
+		return ErrProductNotFound
+	}
+	
 	return nil
 }
 
@@ -65,12 +75,30 @@ func ProductDelete(db *sql.DB, id uint64) error {
 		return erro
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
+	rowsAffected, erro := result.RowsAffected()
+	if erro != nil {
+		return erro
 	}
 
 	if rowsAffected == 0 {
+		return ErrProductNotFound
+	}
+
+	return nil
+}
+
+func ProductReactivate(db *sql.DB, id uint64) error {
+	result, erro := db.Exec("UPDATE products set is_active = true WHERE id=$1;", id)
+	if erro != nil{
+		return erro
+	}
+
+	rowsAffected, erro := result.RowsAffected()
+	if erro != nil{
+		return erro
+	}
+
+	if rowsAffected == 0{
 		return ErrProductNotFound
 	}
 

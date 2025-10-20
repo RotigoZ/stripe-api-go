@@ -36,6 +36,12 @@ func GetProductRoutes(productHandler *controllers.ProductHandler) []Route{
 		Handler: productHandler.ProductDelete,
 		AuthRequired: true,
 	},
+	{
+		URL: "/products/{id}/activate",
+		Method: "PUT",
+		Handler: productHandler.ProductActivate,
+		AuthRequired: true,
+	},
 }
 	return ProductRoutes
 }

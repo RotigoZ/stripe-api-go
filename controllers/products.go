@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/RotigoZ/stripe-api-go/models"
 	"github.com/RotigoZ/stripe-api-go/repositories"
@@ -24,9 +25,22 @@ func NewProductHandler(db *sql.DB) *ProductHandler {
 // Create a product
 func (h *ProductHandler) ProductCreate(w http.ResponseWriter, r *http.Request) {
 	var produto models.Product
-	erro := json.NewDecoder(r.Body).Decode(&produto)
-	if erro != nil || produto.PriceCents < 0 {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	erro := decoder.Decode(&produto)
+	if erro != nil {
+		http.Error(w, "Invalid request body: malformed JSON or unknown fields", http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(produto.Name) == "" {
+		http.Error(w, "The 'name' field cannot be empty", http.StatusBadRequest)
+		return
+	}
+	if produto.PriceCents <= 50 { 
+		http.Error(w, "The 'price' field must be greater than 50 cents", http.StatusBadRequest)
 		return
 	}
 
@@ -90,27 +104,50 @@ func (h *ProductHandler) ProductUpdate(w http.ResponseWriter, r *http.Request) {
 
 	var produto models.Product
 
-	erro = json.NewDecoder(r.Body).Decode(&produto)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	erro = decoder.Decode(&produto)
 	if erro != nil {
-		http.Error(w, "Error reading the response body", http.StatusBadRequest)
+		http.Error(w, "Invalid request body: malformed JSON or unknown fields", http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(produto.Name) == "" {
+		http.Error(w, "The 'name' field cannot be empty", http.StatusBadRequest)
+		return
+	}
+	if produto.PriceCents <= 50 { 
+		http.Error(w, "The 'price' field must be greater than 50 cents", http.StatusBadRequest)
 		return
 	}
 
 	erro = repositories.ProductUpdate(h.db, id, produto)
 	if erro != nil {
-		http.Error(w, "Error searching the product in the database", http.StatusBadRequest)
+		if errors.Is(erro, repositories.ErrProductNotFound) {
+			http.Error(w, "Product not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "An internal server error occurred", http.StatusInternalServerError)
 		return
 	}
 
 	w.Write([]byte("Product updated successfully!"))
 }
 
-// Delete an unique product based on ID
+// Turn a product unactive based on it's ID
 func (h *ProductHandler) ProductDelete(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	id, erro := strconv.ParseUint(params["id"], 10, 64)
+	vars := mux.Vars(r)
+	idString, ok := vars["id"]
+	if !ok {
+		http.Error(w, "Missing product ID in URL", http.StatusBadRequest)
+		return
+	}
+
+	id, erro := strconv.ParseUint(idString, 10, 64)
 	if erro != nil {
-		http.Error(w, "Error reading the parameters in the URL", http.StatusBadRequest)
+		http.Error(w, "Invalid product ID format", http.StatusBadRequest)
 		return
 	}
 
@@ -126,4 +163,30 @@ func (h *ProductHandler) ProductDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("Product deleted successfully!"))
+}
+
+func (h *ProductHandler) ProductActivate(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idString, ok := vars["id"]
+	if !ok {
+		http.Error(w, "Missing product ID in URL", http.StatusBadRequest)
+		return
+	}
+
+	id, erro := strconv.ParseUint(idString, 10, 64)
+	if erro != nil {
+		http.Error(w, "Invalid product ID format", http.StatusBadRequest)
+		return
+	}
+
+	erro = repositories.ProductReactivate(h.db, id)
+	if erro != nil {
+		if errors.Is(erro, repositories.ErrProductNotFound) {
+			http.Error(w, "Product not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "An internal server error occurred", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
