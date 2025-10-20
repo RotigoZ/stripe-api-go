@@ -11,12 +11,14 @@ func GetOrderRoutes(orderHandler *controllers.OrderHandler) []Route{
 			Method:  "POST",
 			Handler: orderHandler.PaymentIntent,
 			AuthRequired: true,
+			AdminOnly: false,
 		},
 		{
 			URL:     "/webhooks/stripe",
 			Method:  "POST",
 			Handler: orderHandler.HandleStripeWebhook,
 			AuthRequired: true,
+			AdminOnly: false,
 		},
 	}
 

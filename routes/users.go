@@ -11,24 +11,28 @@ func GetUserRoutes(userHandler *controllers.UserHandler) []Route{
 			Method:  "POST",
 			Handler: userHandler.UserCreate,
 			AuthRequired: false,
+			AdminOnly: false,
 		},
 		{
 			URL:     "/login",
 			Method:  "POST",
 			Handler: userHandler.UserLogin,
 			AuthRequired: false,
+			AdminOnly: false,
 		},
 		{
 			URL:     "/users",
 			Method:  "GET",
 			Handler: userHandler.UsersRead,
 			AuthRequired: false,
+			AdminOnly: false,
 		},
 		{
 			URL:     "/users/{id}",
 			Method:  "GET",
 			Handler: userHandler.UserRead,
 			AuthRequired: false,
+			AdminOnly: false,
 		},
 	}
 

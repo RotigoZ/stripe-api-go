@@ -39,7 +39,7 @@ func (h *ProductHandler) ProductCreate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "The 'name' field cannot be empty", http.StatusBadRequest)
 		return
 	}
-	if produto.PriceCents <= 50 { 
+	if produto.PriceCents < 50 { 
 		http.Error(w, "The 'price' field must be greater than 50 cents", http.StatusBadRequest)
 		return
 	}
@@ -117,7 +117,7 @@ func (h *ProductHandler) ProductUpdate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "The 'name' field cannot be empty", http.StatusBadRequest)
 		return
 	}
-	if produto.PriceCents <= 50 { 
+	if produto.PriceCents < 50 { 
 		http.Error(w, "The 'price' field must be greater than 50 cents", http.StatusBadRequest)
 		return
 	}

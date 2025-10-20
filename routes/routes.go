@@ -12,6 +12,7 @@ type Route struct {
 	Method       string
 	Handler      http.HandlerFunc
 	AuthRequired bool
+	AdminOnly    bool
 }
 
 func ConfigureRoutes(db *sql.DB) []Route {
