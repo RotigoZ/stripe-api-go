@@ -32,6 +32,10 @@ func main() {
 
 	for _, route := range allRoutes {
 		var handler http.Handler = route.Handler
+
+		if route.SuperAdminOnly {
+			handler = middlewares.AuthMiddleware(middlewares.SuperAdminMiddleware(handler))
+		}
 		
 		if route.AdminOnly{
 			handler = middlewares.AuthMiddleware(middlewares.AdminMiddleware(handler))

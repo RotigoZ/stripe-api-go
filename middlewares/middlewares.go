@@ -63,7 +63,19 @@ func AdminMiddleware(next http.Handler) http.Handler{
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
 			role, ok := r.Context().Value(UserRoleKey).(string)
 
-			if !ok || role != "admin"{
+			if !ok || role != "admin" && role != "superadmin" {
+				http.Error(w, "Forbidden: You do not have permission to permorf this action", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+	})
+}
+
+func SuperAdminMiddleware(next http.Handler) http.Handler{
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+			role, ok := r.Context().Value(UserRoleKey).(string)
+
+			if !ok || role != "superadmin" {
 				http.Error(w, "Forbidden: You do not have permission to permorf this action", http.StatusForbidden)
 				return
 			}

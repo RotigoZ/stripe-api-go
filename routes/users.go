@@ -34,6 +34,13 @@ func GetUserRoutes(userHandler *controllers.UserHandler) []Route{
 			AuthRequired: false,
 			AdminOnly: false,
 		},
+		{
+			URL:     "/users/{id}/role",
+			Method:  "PUT",
+			Handler: userHandler.UserRole,
+			AuthRequired: true,
+			SuperAdminOnly: true,
+		},
 	}
 
 	return UserRoutes

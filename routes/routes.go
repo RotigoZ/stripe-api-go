@@ -8,11 +8,12 @@ import (
 )
 
 type Route struct {
-	URL          string
-	Method       string
-	Handler      http.HandlerFunc
-	AuthRequired bool
-	AdminOnly    bool
+	URL            string
+	Method         string
+	Handler        http.HandlerFunc
+	AuthRequired   bool
+	AdminOnly      bool
+	SuperAdminOnly bool
 }
 
 func ConfigureRoutes(db *sql.DB) []Route {

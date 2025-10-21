@@ -219,3 +219,41 @@ func (h *UserHandler) UserRead(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
+
+func (h *UserHandler) UserRole(w http.ResponseWriter, r *http.Request){
+	params := mux.Vars(r)
+	id, erro := strconv.ParseUint(params["id"], 10, 64)
+	if erro != nil {
+		http.Error(w, "Error reading the parameters in the URL", http.StatusBadRequest)
+		return
+	}
+
+	var payload struct {
+		Role string `json:"role"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if erro := decoder.Decode(&payload); erro != nil{
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	newRole := strings.TrimSpace(payload.Role)
+	if newRole != "admin" && newRole != "customer" {
+		http.Error(w, "Invalid role: must be 'admin' or 'customer'", http.StatusBadRequest)
+		return
+	}
+
+	erro = repositories.UpdateUserRole(h.db, id, newRole)
+	if erro != nil {
+		if errors.Is(erro, repositories.ErrUserNotFound){
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
