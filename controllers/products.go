@@ -165,6 +165,7 @@ func (h *ProductHandler) ProductDelete(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Product deleted successfully!"))
 }
 
+//Turn a product active based on it's ID
 func (h *ProductHandler) ProductActivate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idString, ok := vars["id"]

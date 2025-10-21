@@ -4,12 +4,15 @@
   ![Stripe](https://img.shields.io/badge/Stripe-6772E5?style=for-the-badge&logo=stripe)
   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql) 
   
-A robust backend API built in Go that simulates a complete e-commerce payment flow by integrating with the Stripe API. This project was developed as an in-depth study of software architecture, concurrency, external service integration, and Go development best practices.
+A robust backend API built in Go that simulates a complete e-commerce flow. This project integrates a secure JWT User Authentication and Role-Based Access Control (RBAC) system with the Stripe API for payment processing. This project was developed as an in-depth study of software architecture, security, concurrency, and Go development best practices.
 
 ## ✨ Features
 
-  * **Full Product CRUD:** Endpoints to Create, Read, Update, and Delete products.
-  * **Order Creation:** An endpoint to create a new order with multiple items and quantities, simulating a shopping cart.
+  * **User Authentication & Authorization:** Full registration and login flow using JWT.
+  * **Role-Based Access Control (RBAC):** Secure 3-tier permission system (customer, admin, superadmin) using stacked middlewares.
+  * **User Management:** superadmin-only endpoint to manage user roles.
+  * **Full Product CRUD:** Admin-protected endpoints to Create, Read, Update, and Soft Delete (is_active) products.
+  * **Order Creation:** customer-protected endpoint to create a new order with multiple items.
   * **Stripe Integration:** Generates `PaymentIntents` based on the total order value.
   * **Webhook Handler:** A secure endpoint to receive and process events from Stripe (e.g., `payment_intent.succeeded`), updating the order status in the database.
   * **Clean Architecture:** Utilizes dependency injection to decouple the application layers (handlers, repositories, database).
@@ -19,14 +22,16 @@ A robust backend API built in Go that simulates a complete e-commerce payment fl
   * Language: Go
   * Payment Gateway: Stripe API
   * Database: PostgreSQL
-  * API Testing: Postman
+  * Authentication: golang-jwt/jwt
   * HTTP Router: Gorilla Mux
+  * Password Hashing: golang.org/x/crypto/bcrypt
   * Configuration: Environment variables with `godotenv`
   * Webhook Testing: Stripe CLI
+  * API Testing: Postman
 
 ## 🏛️ Database Schema
 
-  The database is composed of three main tables designed to handle products and multi-item orders. The relationships are established through foreign keys linking `order_items` to both `orders` and `products`.
+  The database is composed of four main tables designed to handle users, roles, products, and multi-item orders. The relationships are established through foreign keys linking `orders` to `users`, and `order_items` to both orders and products.
 
   ![Database Schema Diagram](docs/db_schema.png)
 
@@ -36,33 +41,47 @@ A robust backend API built in Go that simulates a complete e-commerce payment fl
   ```dbml
   // DBML code for dbdiagram.io
 
-  Table products {
-    id int [pk, increment]
-    name varchar(255) [not null]
-    description text
-    price_cents int [not null, note: 'CHECK(price_cents > 0)']
-    created_at timestamptz [default: `now()`]
-  }
+Table users {
+  id bigserial [pk]
+  nick varchar(255) [not null, unique]
+  name varchar(255) [not null]
+  email varchar(255) [not null, unique]
+  password_hash varchar(255) [not null]
+  created_at timestamptz [default: `now()`, not null]
+  role varchar(50) [not null, default: 'customer']
+}
 
-  Table orders {
-    id int [pk, increment]
-    status varchar(50) [not null, default: 'pending']
-    amount_cents int [not null]
-    stripe_payment_intent_id varchar(255) [unique]
-    created_at timestamptz [default: `now()`]
-  }
+Table products {
+  id bigserial [pk]
+  name varchar(255) [not null]
+  nick varchar(50) [not null, unique]
+  description text [not null, default: '']
+  price_cents bigint [not null, note: 'CHECK(price_cents >= 50)']
+  is_active boolean [not null, default: true]
+  created_at timestamptz [default: `now()`]
+}
 
-  Table order_items {
-    id int [pk, increment]
-    order_id int [not null]
-    product_id int [not null]
-    quantity int [not null, note: 'CHECK(quantity > 0)']
-    price_at_purchase_cents int [not null]
-  }
+Table orders {
+  id bigserial [pk]
+  user_id bigserial [not null]
+  status varchar(50) [not null, default: 'pending']
+  amount_cents bigint [not null]
+  stripe_payment_intent_id varchar(255) [unique]
+  created_at timestamptz [default: `now()`]
+}
 
-  // Define relationships
-  Ref: order_items.order_id > orders.id
-  Ref: order_items.product_id > products.id
+Table order_items {
+  id bigserial [pk]
+  order_id bigserial [not null]
+  product_id bigserial [not null]
+  quantity int [not null, note: 'CHECK(quantity > 0)']
+  price_at_purchase_cents bigint [not null]
+}
+
+// Define relationships
+Ref: orders.user_id > users.id
+Ref: order_items.order_id > orders.id
+Ref: order_items.product_id > products.id
 ```
 </details>
 
@@ -101,6 +120,9 @@ Follow these steps to get a local copy up and running.
 
   # Database Configuration (Example for PostgreSQL)
   DATABASE_URL="postgres://your_user:your_password@localhost:5432/your_db_name?sslmode=disable"
+
+  # Secret for signing JWT Tokens (generate a strong random string)
+  JWT_SECRET="YOUR_VERY_STRONG_JWT_SECRET_KEY"
   ```
 
 ### 3. Install Dependencies
@@ -109,7 +131,16 @@ Follow these steps to get a local copy up and running.
   ```
 
 ### 4. Prepare the Database
-  Run the `schema.sql` script to create the `products`, `orders` and `order_items` tables in your database.
+  Run the schema.sql script (containing the 4 tables above) to create the users, products, orders and order_items tables in your database.
+  Bootstrap Super Admin: You must create your first superadmin manually.
+
+  First, register a new user via the POST /users/register endpoint.
+
+  Then, promote this user in your database:
+
+  SQL
+
+  UPDATE users SET role = 'superadmin' WHERE email = 'your-email@example.com';
 
 ### 5. Run the API
   ```bash
@@ -127,56 +158,111 @@ Follow these steps to get a local copy up and running.
 
 ## 🕹️ API Usage (Endpoints)
 
-  First, create a product for test purposes.
+  All protected endpoints require an Authorization: Bearer <TOKEN> header, where <TOKEN> is the JWT received from the /login endpoint.
 
-* **Endpoint:** `POST /products`
-* **Request Body (JSON):**
+Authentication & User Management
+POST /users/register [PUBLIC]
 
-    ```json
-    {
-      "name": "Product 1",
-      "description": "This is product 1!",
-      "price_cents": 5000
-    }
-    ```
-* **cURL Example:**
+Registers a new user (default role: customer).
 
-    ```bash
-    curl -X POST http://localhost:3000/products \
-    -H "Content-Type: application/json" \
-    -d '{ "name": "Product 1", "description": "This is product 1!", "price_cents": 5000 }'
-    ```
-* **Success Response:**
+Body: { "name", "nick", "email", "password" }
 
-    ```
-    Product created successfully!
-    ```
+POST /users/login [PUBLIC]
 
-  The main endpoint to test the flow is for creating orders.
+Authenticates a user and returns a JWT.
 
-### Create an Order
+Body: { "email", "password" }
 
-* **Endpoint:** `POST /orders`
-* **Request Body (JSON):**
-    ```json
-    {
-      "products": [
-        { "product_id": 1, "quantity": 2 }
-      ]
-    }
-    ```
-* **cURL Example:**
-    ```bash
-    curl -X POST http://localhost:3000/orders \
-    -H "Content-Type: application/json" \
-    -d '{ "products": [{ "product_id": 1, "quantity": 2 }] }'
-    ```
-* **Success Response:**
-    ```json
-    {
-      "clientSecret": "pi_..._secret_..."
-    }
-    ```
+Success Response: { "token": "..." }
+
+PUT /users/{id}/role [PROTECTED - SUPERADMIN]
+
+Updates the role of a user.
+
+Header: Authorization: Bearer <TOKEN>
+
+Body: { "role": "admin" } or { "role": "customer" }
+
+Product Management (Admin)
+POST /products [PROTECTED - ADMIN]
+
+Creates a new product. Requires admin or superadmin role.
+
+Header: Authorization: Bearer <TOKEN>
+
+Request Body (JSON):
+
+JSON
+
+{
+  "name": "Product 1",
+  "description": "This is product 1!",
+  "price_cents": 5000
+}
+cURL Example:
+
+Bash
+
+curl -X POST http://localhost:3000/products \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <TOKEN>" \
+-d '{ "name": "Product 1", "description": "This is product 1!", "price_cents": 5000 }'
+PUT /products/{id} [PROTECTED - ADMIN]
+
+Updates an existing product.
+
+DELETE /products/{id} [PROTECTED - ADMIN]
+
+Soft Deletes a product (sets is_active = false).
+
+PUT /products/{id}/activate [PROTECTED - ADMIN]
+
+Re-activates a soft-deleted product (sets is_active = true).
+
+Orders & Payments (Customer)
+GET /products [PUBLIC]
+
+Lists all active products.
+
+GET /products/{id} [PUBLIC]
+
+Gets a single active product.
+
+POST /orders [PROTECTED - CUSTOMER]
+
+Creates a new order and a Stripe PaymentIntent. Requires any authenticated user.
+
+Header: Authorization: Bearer <TOKEN>
+
+Request Body (JSON):
+
+JSON
+
+{
+  "products": [
+    { "product_id": 1, "quantity": 2 }
+  ]
+}
+cURL Example:
+
+Bash
+
+curl -X POST http://localhost:3000/orders \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <TOKEN>" \
+-d '{ "products": [{ "product_id": 1, "quantity": 2 }] }'
+Success Response:
+
+JSON
+
+{
+  "clientSecret": "pi_..._secret_..."
+}
+POST /webhooks/stripe [PUBLIC - VERIFIED BY STRIPE]
+
+Internal endpoint for Stripe to send events.
+
+Listens for payment_intent.succeeded to update the order status to paid.
 
 ### Confirming the Payment (End-to-End Test)
 
@@ -217,6 +303,7 @@ This project does not yet have an automated test suite. Future work includes add
 
 ## Future Improvement
 
-* **User Authentication:** Implement JWT authentication for user-specific orders. (In process)
+* **User Authentication:** Implement JWT authentication for user-specific orders. (Done)
 * **Frontend Application:** Build a client-side application to interact with the API.
 * **Pagination:** Add pagination to the GET /products endpoint.
+* **Unit Tests:** Add a full suite of unit and integration tests.

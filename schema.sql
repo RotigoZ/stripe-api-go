@@ -6,13 +6,15 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE products (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT,
-    price_cents INT NOT NULL CHECK(price_cents > 0),
+    description TEXT NOT NULL DEFAULT '',
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    price_cents INT NOT NULL CHECK(price_cents >= 50),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id),
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     amount_cents INT NOT NULL,
     stripe_payment_intent_id VARCHAR(255) UNIQUE,
@@ -33,5 +35,6 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    role VARCHAR(50) NOT NULL DEFAULT 'customer'
 );

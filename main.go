@@ -20,7 +20,7 @@ func main() {
 	}
 
 	stripe.Key = os.Getenv("SECRET_KEY")
-
+	
 	db, erro := db.Connect()
 	if erro != nil {
 		log.Fatal("Error connecting to the database")
@@ -35,9 +35,7 @@ func main() {
 
 		if route.SuperAdminOnly {
 			handler = middlewares.AuthMiddleware(middlewares.SuperAdminMiddleware(handler))
-		}
-		
-		if route.AdminOnly{
+		} else if route.AdminOnly{
 			handler = middlewares.AuthMiddleware(middlewares.AdminMiddleware(handler))
 		} else if route.AuthRequired {
 			handler = middlewares.AuthMiddleware(handler)

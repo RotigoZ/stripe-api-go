@@ -183,6 +183,7 @@ func (h *UserHandler) UserLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+//UsersRead reas all the users
 func (h *UserHandler) UsersRead(w http.ResponseWriter, r *http.Request) {
 	var users []models.Users
 
@@ -202,6 +203,7 @@ func (h *UserHandler) UsersRead(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+//UserRead reads a single user based on it's ID
 func (h *UserHandler) UserRead(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, erro := strconv.ParseUint(params["id"], 10, 64)
@@ -220,6 +222,7 @@ func (h *UserHandler) UserRead(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+//UserRole change a user role
 func (h *UserHandler) UserRole(w http.ResponseWriter, r *http.Request){
 	params := mux.Vars(r)
 	id, erro := strconv.ParseUint(params["id"], 10, 64)
